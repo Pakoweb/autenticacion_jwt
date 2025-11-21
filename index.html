@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Login JWT</title>
+</head>
+<body>
+
+    <h2>Iniciar Sesión</h2>
+    <p id="error-msg" style="color: red;"></p>
+
+    <input id="username" type="text" placeholder="Nombre de usuario"><br><br>
+    <input id="password" type="password" placeholder="Contraseña"><br><br>
+
+    <button onclick="login()">Entrar</button>
+
+    <script>
+        // Si ya hay un token, podríamos redirigir, pero para el login simplemente lo quitamos.
+        localStorage.removeItem('token');
+        
+        function login() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const errorMsg = document.getElementById("error-msg");
+            errorMsg.textContent = "";
+
+            // POST /api/login
+            fetch("api_login.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ username, password })
+            })
+            .then(res => {
+                if (res.ok) { // Éxito (Status 200)
+                    return res.json();
+                } else if (res.status === 401) {
+                    // 401 Unauthorized (Credenciales incorrectas)
+                    return res.json().then(data => { throw new Error(data.error); });
+                }
+                throw new Error("Error en la petición: " + res.status);
+            })
+            .then(data => {
+                if (data.token) {
+                    // Guardamos el JWT en localStorage
+                    localStorage.setItem("token", data.token);
+                    // Redirigir a la pantalla de bienvenida
+                    window.location.href = "welcome.html";
+                }
+            })
+            .catch(err => {
+                // Mostrar error
+                errorMsg.textContent = "Error: " + err.message;
+                console.error(err);
+            });
+        }
+    </script>
+
+</body>
+</html>

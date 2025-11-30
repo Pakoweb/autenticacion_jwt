@@ -1,59 +1,72 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Login JWT</title>
+  <meta charset="UTF-8">
+  <title>Login</title>
 </head>
 <body>
+  <h1>Sistema de Autenticación - Login</h1>
 
-    <h2>Iniciar Sesión</h2>
-    <p id="error-msg" style="color: red;"></p>
+  <form id="loginForm">
+    <div>
+      <label for="username">Nombre de usuario:</label>
+      <input type="text" id="username" name="username" required>
+    </div>
 
-    <input id="username" type="text" placeholder="Nombre de usuario"><br><br>
-    <input id="password" type="password" placeholder="Contraseña"><br><br>
+    <div>
+      <label for="password">Contraseña:</label>
+      <input type="password" id="password" name="password" required>
+    </div>
 
-    <button onclick="login()">Entrar</button>
+    <button type="submit">Entrar</button>
+  </form>
 
-    <script>
-        // Si ya hay un token, podríamos redirigir, pero para el login simplemente lo quitamos.
-        localStorage.removeItem('token');
-        
-        function login() {
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
-            const errorMsg = document.getElementById("error-msg");
-            errorMsg.textContent = "";
+  <p id="mensaje" style="color:red;"></p>
 
-            // POST /api/login
-            fetch("api_login.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ username, password })
-            })
-            .then(res => {
-                if (res.ok) { // Éxito (Status 200)
-                    return res.json();
-                } else if (res.status === 401) {
-                    // 401 Unauthorized (Credenciales incorrectas)
-                    return res.json().then(data => { throw new Error(data.error); });
-                }
-                throw new Error("Error en la petición: " + res.status);
-            })
-            .then(data => {
-                if (data.token) {
-                    // Guardamos el JWT en localStorage
-                    localStorage.setItem("token", data.token);
-                    // Redirigir a la pantalla de bienvenida
-                    window.location.href = "welcome.html";
-                }
-            })
-            .catch(err => {
-                // Mostrar error
-                errorMsg.textContent = "Error: " + err.message;
-                console.error(err);
-            });
+  <script>
+    
+
+    const form = document.getElementById('loginForm');
+    const mensaje = document.getElementById('mensaje');
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      fetch('api/api_login.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else if (response.status === 401) {
+          // Credenciales incorrectas → vamos a no_permisos.html
+          window.location.href = 'no_permisos.html';
+          throw new Error('Redirigiendo a no_permisos');
+        } else {
+          throw new Error('Error del servidor');
         }
-    </script>
+      })
+      .then(data => {
+        // Guardamos token y username
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('username', data.username);
 
+        // Redirigimos a la pantalla de bienvenida
+        window.location.href = 'welcome.html';
+      })
+      .catch(err => {
+        // Si no hemos redirigido ya, podemos mostrar mensaje genérico
+        console.error(err);
+        // mensaje.textContent = 'Ha ocurrido un error.';
+      });
+    });
+  </script>
 </body>
 </html>

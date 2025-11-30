@@ -1,65 +1,70 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Bienvenida</title>
+  <meta charset="UTF-8">
+  <title>Pantalla de Bienvenida</title>
 </head>
 <body>
+  <h1>Pantalla de Bienvenida</h1>
 
-    <h1>Bienvenido, <span id="user-name">...</span>!</h1>
-    <p>La hora actual es: <span id="current-time"></span></p>
-    <h2>¡Acceso verificado. Tus permisos están garantizados por el JWT!</h2>
+  <p id="saludo"></p>
+  <p id="hora"></p>
+  <p id="mensaje"></p>
 
-    <button onclick="logout()">Cerrar Sesión</button>
+  <button id="logoutBtn">Cerrar sesión</button>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('token');
-            const userNameElement = document.getElementById('user-name');
-            const currentTimeElement = document.getElementById('current-time');
+  <script>
+    const token = localStorage.getItem('token');
 
-            // Mostrar la hora actual (Requisito 3)
-            currentTimeElement.textContent = new Date().toLocaleString();
-
-            if (!token) {
-                // Si no hay token, redirigir al login
-                window.location.href = "index.html";
-                return;
-            }
-
-            // Llamada al endpoint protegido (GET /api/welcome)
-            fetch("api_welcome.php", {
-                headers: {
-                    // Enviar el token en la cabecera (Requisito Técnico 2)
-                    "Authorization": "Bearer " + token
-                }
-            })
-            .then(res => {
-                if (res.ok) { // Éxito (Status 200)
-                    return res.json();
-                } else if (res.status === 403) {
-                    // 403 Forbidden (Token Inválido, Expirado o no Autorizado)
-                    throw new Error("No tienes permisos");
-                }
-                throw new Error("Error en la API: " + res.status);
-            })
-            .then(data => {
-                // Mostrar el nombre del usuario (viene del payload del JWT)
-                userNameElement.textContent = data.datos_usuario.username;
-            })
-            .catch(err => {
-                console.error("Error de autenticación o permisos:", err.message);
-                // Redirigir a la pantalla de "No Tienes Permisos" (Requisito 4)
-                window.location.href = "no_permisos.html";
-            });
-        });
-
-        // Funcionalidad para Cerrar Sesión (Requisito 5)
-        function logout() {
-            localStorage.removeItem('token'); // Eliminar el token
-            window.location.href = "index.html"; // Redirigir al login
+    // Si no hay token → no tienes permiso
+    if (!token) {
+      window.location.href = 'no_permisos.html';
+    } else {
+      fetch('api/api_welcome.php', {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + token
         }
-    </script>
+      })
+      .then(response => {
+        if (response.ok) {
+          return response.json();
+        } else if (response.status === 403 || response.status === 401) {
+          // Sin permisos → redirigir a no_permisos
+          window.location.href = 'no_permisos.html';
+          throw new Error('No tienes permisos');
+        } else {
+          throw new Error('Error del servidor');
+        }
+      })
+      .then(data => {
+        document.getElementById('saludo').textContent =
+          'Hola, ' + data.username;
 
+        document.getElementById('hora').textContent =
+          'Hora actual del servidor: ' + data.horaServidor;
+
+        document.getElementById('mensaje').textContent =
+          data.message + ' ¡Disfruta de la aplicación!';
+
+        // Opcional: actualización de hora del cliente
+        setInterval(() => {
+          const ahora = new Date();
+          document.getElementById('hora').textContent =
+            'Hora actual (cliente): ' + ahora.toLocaleTimeString();
+        }, 1000);
+      })
+      .catch(err => {
+        console.error(err);
+      });
+    }
+
+    // Cerrar sesión
+    document.getElementById('logoutBtn').addEventListener('click', function () {
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      window.location.href = 'index.html';
+    });
+  </script>
 </body>
 </html>

@@ -4,7 +4,7 @@
 header('Content-Type: application/json; charset=utf-8');
 
 // Misma clave secreta
-$secret_key = "mi_clave_super_secreta_123";
+$secret_key = "clave";
 
 // Mismo array de usuarios
 $usuarios = [
@@ -96,7 +96,7 @@ if ($payload === null) {
 
 $username = $payload["username"];
 
-// (Opcional) Comprobar que el usuario sigue existiendo en el array
+// Comprobar que el usuario sigue existiendo en el array
 $usuarioExiste = false;
 foreach ($usuarios as $u) {
     if ($u["username"] === $username) {

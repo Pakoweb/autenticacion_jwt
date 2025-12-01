@@ -4,7 +4,7 @@
 header('Content-Type: application/json; charset=utf-8');
 
 // Clave secreta para firmar el JWT
-$secret_key = "mi_clave_super_secreta_123";
+$secret_key = "clave";
 
 // Array de usuarios (simula base de datos)
 $usuarios = [
